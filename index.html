@@ -3,41 +3,78 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Arduino-Style LED Simulator</title>
+    <title>LumaLab Studio — LED Sketch Engine</title>
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
-    <main class="app">
-      <section class="panel code-panel">
-        <h1>LED Loop Simulator</h1>
-        <p>
-          Write Arduino-style code with <code>setup()</code> and <code>loop()</code>. Built-in APIs include
-          <code>pinMode</code>, <code>digitalWrite</code>, <code>analogWrite</code>, <code>toggle</code>,
-          <code>setAll</code>, <code>shiftLeft</code>, <code>shiftRight</code>, <code>delay</code>,
-          <code>millis</code>, and <code>random</code>.
-        </p>
-        <textarea id="codeEditor" spellcheck="false"></textarea>
+    <main class="workspace">
+      <header class="topbar panel">
+        <div>
+          <p class="eyebrow">Editor-style Runtime Lab</p>
+          <h1>LumaLab Studio</h1>
+        </div>
+        <div class="status-pills">
+          <span id="runtimeStatus" class="pill idle">Idle</span>
+          <span id="cacheStatus" class="pill">Cache warmup</span>
+          <span id="lastRun" class="pill">No runs yet</span>
+        </div>
+      </header>
+
+      <section class="panel editor-panel">
+        <div class="editor-toolbar">
+          <label>
+            Presets
+            <select id="presetSelect"></select>
+          </label>
+          <button id="loadPresetBtn" type="button">Load preset</button>
+          <button id="saveDraftBtn" type="button">Save draft</button>
+          <button id="clearConsoleBtn" type="button">Clear logs</button>
+        </div>
+
+        <div class="editor-shell">
+          <pre id="lineNumbers" aria-hidden="true"></pre>
+          <textarea id="codeEditor" spellcheck="false"></textarea>
+        </div>
 
         <div class="controls">
-          <button id="runBtn">Run</button>
+          <button id="runBtn" class="primary">Run</button>
           <button id="stopBtn">Stop</button>
           <button id="resetBtn">Reset LEDs</button>
           <label>
-            Loop delay safety (ms):
-            <input id="loopSafety" type="number" min="0" value="0" />
+            Loop safety delay (ms)
+            <input id="loopSafety" type="number" min="0" max="2000" step="10" value="20" />
+          </label>
+          <label>
+            Max loop runtime (ms)
+            <input id="maxRunMs" type="number" min="100" max="120000" step="100" value="15000" />
           </label>
         </div>
 
-        <pre id="console"></pre>
+        <pre id="console" aria-live="polite"></pre>
       </section>
 
       <section class="panel sim-panel">
-        <h2>Virtual LED Strip</h2>
+        <div class="sim-header">
+          <h2>Virtual LED Strip</h2>
+          <div class="stats-grid">
+            <article>
+              <h3 id="litCount">0</h3>
+              <p>LEDs lit</p>
+            </article>
+            <article>
+              <h3 id="avgBrightness">0%</h3>
+              <p>Avg brightness</p>
+            </article>
+            <article>
+              <h3 id="loopCounter">0</h3>
+              <p>Loop cycles</p>
+            </article>
+          </div>
+        </div>
         <div id="ledStrip" class="led-strip"></div>
         <div class="legend">
-          <span><strong>ON</strong>: bright red</span>
-          <span><strong>OFF</strong>: dark</span>
-          <span><strong>PWM</strong>: variable brightness via <code>analogWrite</code></span>
+          <span><strong>OFF:</strong> dormant diode</span>
+          <span><strong>ON/PWM:</strong> intensity scales with analog value</span>
         </div>
       </section>
     </main>
