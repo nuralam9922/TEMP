@@ -1,14 +1,16 @@
-# Web LED Loop Simulator (Arduino Style)
+# LumaLab Studio (Arduino-style LED simulator)
 
-This app is a browser-based LED simulator where users can write Arduino-like C++ style code using `setup()` and `loop()` to control a virtual LED strip.
+A modern editor-style web app for building and stress-testing LED animations with Arduino-like code (`setup()` + `loop()`).
 
-## Features
+## Highlights
 
-- Web UI with a code editor and virtual LED strip.
-- Arduino-style structure:
-  - `void setup() { ... }`
-  - `void loop() { ... }`
-- Built-in control APIs:
+- Editor-inspired interface with line numbers, runtime status pills, and debug console.
+- Preset library (`scanner`, `pulse`, `randomize`) + local draft caching.
+- Virtual LED strip with live telemetry (`LEDs lit`, `avg brightness`, `loop cycles`).
+- Safety guards for long/tight loops:
+  - configurable loop safety delay
+  - max runtime watchdog
+- Built-in APIs:
   - `pinMode(pin, mode)`
   - `digitalWrite(pin, HIGH|LOW)`
   - `analogWrite(pin, 0..255)`
@@ -26,10 +28,10 @@ This app is a browser-based LED simulator where users can write Arduino-like C++
 python3 -m http.server 8000
 ```
 
-Then open: `http://localhost:8000`
+Open <http://localhost:8000>.
 
-## Notes
+## Reliability notes
 
-- The simulator accepts Arduino-like syntax and normalizes common declarations (`int`, `float`, `bool`, etc.) to run in-browser.
-- You can stop execution any time using the **Stop** button.
-- `Loop delay safety` adds a delay after each `loop()` iteration to prevent accidental tight infinite loops.
+- Program-level error logging with a dedicated runtime error state.
+- Compile cache keeps transformed sketches in memory to improve repeat run speed.
+- Drafts and cache metadata are stored in `localStorage` when available.
