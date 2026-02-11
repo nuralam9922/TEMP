@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Codex Studio | Split Editor</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <header class="topbar">
+        <div class="brand">
+          <span class="dot"></span>
+          <h1>Codex Studio</h1>
+        </div>
+
+        <div class="toolbar">
+          <label class="control">
+            <span>Language</span>
+            <select id="languageSelect">
+              <option value="html">HTML</option>
+              <option value="css">CSS</option>
+              <option value="javascript" selected>JavaScript</option>
+              <option value="json">JSON</option>
+              <option value="markdown">Markdown</option>
+            </select>
+          </label>
+
+          <label class="control checkbox">
+            <input type="checkbox" id="wordWrapToggle" checked />
+            <span>Wrap</span>
+          </label>
+
+          <label class="control checkbox">
+            <input type="checkbox" id="lineNumbersToggle" checked />
+            <span>Line #</span>
+          </label>
+
+          <label class="control">
+            <span>Font</span>
+            <input type="number" id="fontSizeInput" min="11" max="28" value="14" />
+          </label>
+
+          <label class="control">
+            <span>Tab</span>
+            <input type="number" id="tabSizeInput" min="2" max="8" value="2" />
+          </label>
+
+          <label class="control">
+            <span>Auto (ms)</span>
+            <input type="number" id="delayInput" min="100" max="3000" step="100" value="700" />
+          </label>
+
+          <button id="formatBtn" class="btn">Format</button>
+          <button id="runBtn" class="btn primary">Run</button>
+          <button id="themeBtn" class="btn ghost">Theme</button>
+        </div>
+      </header>
+
+      <section class="utility-row">
+        <div class="search-wrap">
+          <input id="searchInput" type="text" placeholder="Find" />
+          <input id="replaceInput" type="text" placeholder="Replace" />
+          <label class="control checkbox">
+            <input type="checkbox" id="matchCaseToggle" />
+            <span>Case</span>
+          </label>
+          <label class="control checkbox">
+            <input type="checkbox" id="wholeWordToggle" />
+            <span>Word</span>
+          </label>
+          <label class="control checkbox">
+            <input type="checkbox" id="regexToggle" />
+            <span>Regex</span>
+          </label>
+          <button id="findNextBtn" class="btn">Next</button>
+          <button id="replaceOneBtn" class="btn">Replace</button>
+          <button id="replaceAllBtn" class="btn">Replace All</button>
+        </div>
+
+        <div class="file-actions">
+          <button id="downloadBtn" class="btn">Download</button>
+          <button id="resetBtn" class="btn danger">Reset</button>
+        </div>
+      </section>
+
+      <main class="split-layout" id="splitLayout">
+        <section class="panel editor-panel">
+          <div class="panel-head">
+            <p id="statusText">Ready</p>
+            <p id="cursorText">Ln 1, Col 1</p>
+          </div>
+
+          <div class="editor-frame" id="editorFrame">
+            <pre class="line-numbers" id="lineNumbers"></pre>
+            <textarea id="editor" spellcheck="false" aria-label="Code editor"></textarea>
+          </div>
+        </section>
+
+        <div class="resizer" id="resizer" role="separator" aria-orientation="vertical"></div>
+
+        <section class="panel preview-panel">
+          <div class="panel-head">
+            <p>Live Output</p>
+            <button id="clearConsoleBtn" class="btn">Clear Logs</button>
+          </div>
+
+          <iframe id="preview" title="Code preview"></iframe>
+          <pre class="console" id="consoleOutput">Console ready...</pre>
+        </section>
+      </main>
+    </div>
+
+    <script src="app.js"></script>
+  </body>
+</html>
