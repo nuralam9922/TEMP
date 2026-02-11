@@ -63,12 +63,22 @@ function createLeds() {
 }
 
 function normalizeForJavaScript(source) {
-  return source
+  const normalized = source
     .replace(/\bvoid\s+setup\s*\(\s*\)/g, 'async function setup()')
     .replace(/\bvoid\s+loop\s*\(\s*\)/g, 'async function loop()')
     .replace(/\b(?:int|float|double|long|short|byte|bool|String)\s+/g, 'let ')
     .replace(/\btrue\b/g, 'true')
     .replace(/\bfalse\b/g, 'false');
+
+  // Arduino's delay() is blocking. Convert plain delay(...) calls to await delay(...)
+  // so user sketches behave as expected in JavaScript async functions.
+  return normalized.replace(/\bdelay\s*\(/g, (match, offset, fullText) => {
+    const leadingText = fullText.slice(Math.max(0, offset - 12), offset);
+    if (/await\s*$/.test(leadingText)) {
+      return match;
+    }
+    return `await ${match}`;
+  });
 }
 
 function buildRuntime() {
@@ -92,6 +102,9 @@ function buildRuntime() {
     },
     analogWrite(pin, value) {
       const p = clampPin(pin);
+      if (pinModes.get(p) !== OUTPUT) {
+        throw new Error(`Pin ${p} is not OUTPUT.`);
+      }
       const normalized = Math.max(0, Math.min(255, Number(value)));
       pinValues.set(p, normalized);
       renderPin(p);
@@ -131,10 +144,17 @@ function buildRuntime() {
     },
     random(min, max) {
       if (typeof max === 'undefined') {
-        return Math.floor(Math.random() * Number(min));
+        const upper = Number(min);
+        if (!Number.isFinite(upper) || upper <= 0) {
+          throw new Error('random(max) requires max > 0.');
+        }
+        return Math.floor(Math.random() * upper);
       }
       const low = Number(min);
       const high = Number(max);
+      if (!Number.isFinite(low) || !Number.isFinite(high) || high <= low) {
+        throw new Error('random(min, max) requires finite numbers with max > min.');
+      }
       return Math.floor(Math.random() * (high - low) + low);
     },
     print(value) {
