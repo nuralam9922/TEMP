@@ -70,15 +70,178 @@ function normalizeForJavaScript(source) {
     .replace(/\btrue\b/g, 'true')
     .replace(/\bfalse\b/g, 'false');
 
-  // Arduino's delay() is blocking. Convert plain delay(...) calls to await delay(...)
-  // so user sketches behave as expected in JavaScript async functions.
-  return normalized.replace(/\bdelay\s*\(/g, (match, offset, fullText) => {
-    const leadingText = fullText.slice(Math.max(0, offset - 12), offset);
-    if (/await\s*$/.test(leadingText)) {
-      return match;
+  // Arduino's delay() is blocking. Convert standalone delay(...) calls to
+  // await delay(...) only when they appear inside async function bodies.
+  let output = '';
+  let i = 0;
+  let lineComment = false;
+  let blockComment = false;
+  let stringQuote = null;
+  let escapeNext = false;
+  let templateDepth = 0;
+  let braceDepth = 0;
+  let pendingFunction = null;
+  const functionStack = [];
+
+  function isIdentifierChar(char) {
+    return /[A-Za-z0-9_$]/.test(char);
+  }
+
+  function getPrevWord(index) {
+    let end = index - 1;
+    while (end >= 0 && /\s/.test(normalized[end])) {
+      end -= 1;
     }
-    return `await ${match}`;
-  });
+    let start = end;
+    while (start >= 0 && isIdentifierChar(normalized[start])) {
+      start -= 1;
+    }
+    return normalized.slice(start + 1, end + 1);
+  }
+
+  function inAsyncFunction() {
+    if (!functionStack.length) {
+      return false;
+    }
+    return functionStack[functionStack.length - 1].async;
+  }
+
+  while (i < normalized.length) {
+    const char = normalized[i];
+    const next = normalized[i + 1];
+
+    if (lineComment) {
+      output += char;
+      if (char === '\n') {
+        lineComment = false;
+      }
+      i += 1;
+      continue;
+    }
+
+    if (blockComment) {
+      output += char;
+      if (char === '*' && next === '/') {
+        output += '/';
+        blockComment = false;
+        i += 2;
+      } else {
+        i += 1;
+      }
+      continue;
+    }
+
+    if (stringQuote) {
+      output += char;
+      if (escapeNext) {
+        escapeNext = false;
+      } else if (char === '\\') {
+        escapeNext = true;
+      } else if (char === stringQuote) {
+        stringQuote = null;
+      } else if (stringQuote === '`' && char === '$' && next === '{') {
+        output += '{';
+        templateDepth += 1;
+        braceDepth += 1;
+        i += 2;
+        continue;
+      }
+      i += 1;
+      continue;
+    }
+
+    if (char === '/' && next === '/') {
+      output += '//';
+      lineComment = true;
+      i += 2;
+      continue;
+    }
+
+    if (char === '/' && next === '*') {
+      output += '/*';
+      blockComment = true;
+      i += 2;
+      continue;
+    }
+
+    if (char === '"' || char === "'" || char === '`') {
+      output += char;
+      stringQuote = char;
+      i += 1;
+      continue;
+    }
+
+    if (char === '{') {
+      if (pendingFunction) {
+        functionStack.push({
+          async: pendingFunction.async,
+          startDepth: braceDepth + 1,
+        });
+        pendingFunction = null;
+      }
+      braceDepth += 1;
+      output += char;
+      i += 1;
+      continue;
+    }
+
+    if (char === '}') {
+      braceDepth = Math.max(0, braceDepth - 1);
+      while (functionStack.length && functionStack[functionStack.length - 1].startDepth > braceDepth) {
+        functionStack.pop();
+      }
+      if (templateDepth > 0) {
+        templateDepth -= 1;
+      }
+      output += char;
+      i += 1;
+      continue;
+    }
+
+    if (isIdentifierChar(char)) {
+      let end = i + 1;
+      while (end < normalized.length && isIdentifierChar(normalized[end])) {
+        end += 1;
+      }
+      const word = normalized.slice(i, end);
+
+      if (word === 'function') {
+        pendingFunction = { async: getPrevWord(i) === 'async' };
+        output += word;
+        i = end;
+        continue;
+      }
+
+      if (word === 'delay' && inAsyncFunction()) {
+        let lookahead = end;
+        while (lookahead < normalized.length && /\s/.test(normalized[lookahead])) {
+          lookahead += 1;
+        }
+
+        const prevWord = getPrevWord(i);
+        let prevCharIndex = i - 1;
+        while (prevCharIndex >= 0 && /\s/.test(normalized[prevCharIndex])) {
+          prevCharIndex -= 1;
+        }
+        const prevChar = prevCharIndex >= 0 ? normalized[prevCharIndex] : '';
+
+        if (normalized[lookahead] === '(' && prevChar !== '.' && prevWord !== 'await' && prevWord !== 'function') {
+          output += 'await delay';
+          i = end;
+          continue;
+        }
+      }
+
+      output += word;
+      i = end;
+      continue;
+    }
+
+    output += char;
+    i += 1;
+  }
+
+  return output;
 }
 
 function buildRuntime() {
