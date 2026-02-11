@@ -18,6 +18,15 @@ const pinValues = new Map();
 let runningToken = 0;
 let startTime = Date.now();
 
+function isProgramRunning() {
+  return runBtn.disabled;
+}
+
+function setProgramRunningState(running) {
+  runBtn.disabled = running;
+  stopBtn.disabled = !running;
+}
+
 function log(message) {
   consoleEl.textContent += `${message}\n`;
   consoleEl.scrollTop = consoleEl.scrollHeight;
@@ -299,8 +308,23 @@ function buildRuntime() {
       pinValues.set(0, 0);
       renderAll();
     },
-    delay(ms) {
-      return new Promise((resolve) => setTimeout(resolve, Math.max(0, Number(ms) || 0)));
+    async delay(ms) {
+      const durationMs = Math.max(0, Number(ms) || 0);
+      const tickMs = 16;
+
+      if (durationMs === 0) {
+        return;
+      }
+
+      const startedAt = Date.now();
+      while (Date.now() - startedAt < durationMs) {
+        if (runningToken === 0) {
+          throw new Error('Program stopped.');
+        }
+        const elapsed = Date.now() - startedAt;
+        const remaining = durationMs - elapsed;
+        await new Promise((resolve) => setTimeout(resolve, Math.min(tickMs, remaining)));
+      }
     },
     millis() {
       return Date.now() - startTime;
@@ -339,7 +363,12 @@ async function compileUserCode(code, runtime) {
 }
 
 async function runProgram() {
+  if (isProgramRunning()) {
+    return;
+  }
+
   const token = ++runningToken;
+  setProgramRunningState(true);
   clearLog();
   startTime = Date.now();
   log('Compiling sketch...');
@@ -359,13 +388,20 @@ async function runProgram() {
       }
     }
   } catch (error) {
-    log(`Error: ${error.message}`);
-    runningToken += 1;
+    if (error.message !== 'Program stopped.') {
+      log(`Error: ${error.message}`);
+    }
+    runningToken = 0;
+  } finally {
+    setProgramRunningState(false);
   }
 }
 
 function stopProgram() {
-  runningToken += 1;
+  if (!isProgramRunning()) {
+    return;
+  }
+  runningToken = 0;
   log('Program stopped.');
 }
 
@@ -384,3 +420,4 @@ stopBtn.addEventListener('click', stopProgram);
 resetBtn.addEventListener('click', resetLeds);
 
 createLeds();
+setProgramRunningState(false);
