@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Arduino-Style LED Simulator</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main class="app">
+      <section class="panel code-panel">
+        <h1>LED Loop Simulator</h1>
+        <p>
+          Write Arduino-style code with <code>setup()</code> and <code>loop()</code>. Built-in APIs include
+          <code>pinMode</code>, <code>digitalWrite</code>, <code>analogWrite</code>, <code>toggle</code>,
+          <code>setAll</code>, <code>shiftLeft</code>, <code>shiftRight</code>, <code>delay</code>,
+          <code>millis</code>, and <code>random</code>.
+        </p>
+        <textarea id="codeEditor" spellcheck="false"></textarea>
+
+        <div class="controls">
+          <button id="runBtn">Run</button>
+          <button id="stopBtn">Stop</button>
+          <button id="resetBtn">Reset LEDs</button>
+          <label>
+            Loop delay safety (ms):
+            <input id="loopSafety" type="number" min="0" value="0" />
+          </label>
+        </div>
+
+        <pre id="console"></pre>
+      </section>
+
+      <section class="panel sim-panel">
+        <h2>Virtual LED Strip</h2>
+        <div id="ledStrip" class="led-strip"></div>
+        <div class="legend">
+          <span><strong>ON</strong>: bright red</span>
+          <span><strong>OFF</strong>: dark</span>
+          <span><strong>PWM</strong>: variable brightness via <code>analogWrite</code></span>
+        </div>
+      </section>
+    </main>
+
+    <script src="app.js"></script>
+  </body>
+</html>
