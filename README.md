@@ -1,29 +1,24 @@
-# LumaLab Studio (Arduino-style LED simulator)
+# LumaLab X (Ultimate LED WebApp IDE)
 
-A single-window advanced editor workspace for building and stress-testing LED animations with Arduino-like code (`setup()` + `loop()`).
+LumaLab X is a single-window, no-scroll, high-density web IDE for Arduino-style LED sketching (`setup()` + `loop()`) with a polished UX and strong runtime resilience.
 
-## Highlights
+## What was upgraded
 
-- Dense no-scroll workspace with draggable splitters for panel width and console height.
-- Enhanced UX controls:
-  - API search panel filtering
-  - dynamic LED count (6..24) with instant simulator rebuild
-  - autosave toggle with debounced draft persistence
-  - import/export draft actions
-  - contrast mode toggle for accessibility
-- Editor productivity features:
-  - line numbers, live cursor position, snippets, one-click formatter
-  - bracket pairing + tab indentation
-  - keyboard shortcuts (`Ctrl/Cmd + Enter`, `Ctrl/Cmd + S`, `Ctrl/Cmd + Space`)
-  - contextual autocomplete popup
-- Runtime observability:
-  - live telemetry (`LEDs lit`, `avg brightness`, `loop cycles`, `loops/s`)
-  - manual LED toggling when runtime is idle
-- Runtime safety and resilience:
-  - global fallback banner with one-click recovery
-  - guarded event wiring and safe startup calls
-  - input range validation + sketch structure validation
-  - runtime watchdog + loop safety delay
+- Modern webapp shell with split-pane layout and drag-resize handles.
+- Professional editor stack via CDNs:
+  - Tailwind CSS
+  - CodeMirror (syntax highlighting, line numbers, autocomplete, bracket support)
+  - js-beautify formatter
+- Rich UX controls:
+  - presets, snippets, import/export, save, format, keyboard shortcuts
+  - dynamic LED strip (6..30 LEDs) with interactive manual toggles
+  - real-time stats (`lit LEDs`, `avg brightness`, `loop cycles`, `loops/s`)
+- Advanced safety and fallback:
+  - global error + unhandled rejection fallback banner
+  - protected run/stop/reset actions through safe wrappers
+  - recover button to restore workspace quickly
+  - storage fallback handling when localStorage is unavailable
+- In-app API/help explorer with instant search.
 
 ## Run locally
 
@@ -31,11 +26,11 @@ A single-window advanced editor workspace for building and stress-testing LED an
 python3 -m http.server 8000
 ```
 
-Open <http://localhost:8000>.
+Then open: <http://localhost:8000>
 
-## Built-in APIs
+## Core runtime APIs
 
-- `pinMode(pin, mode)`
+- `pinMode(pin, OUTPUT)`
 - `digitalWrite(pin, HIGH|LOW)`
 - `analogWrite(pin, 0..255)`
 - `toggle(pin)`
