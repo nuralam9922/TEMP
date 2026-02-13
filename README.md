@@ -1,26 +1,29 @@
 # LumaLab Studio (Arduino-style LED simulator)
 
-A modern editor-style web app for building and stress-testing LED animations with Arduino-like code (`setup()` + `loop()`).
+A single-window advanced editor workspace for building and stress-testing LED animations with Arduino-like code (`setup()` + `loop()`).
 
 ## Highlights
 
-- Editor-inspired interface with line numbers, runtime status pills, and debug console.
-- Preset library (`scanner`, `pulse`, `randomize`) + local draft caching.
-- Virtual LED strip with live telemetry (`LEDs lit`, `avg brightness`, `loop cycles`).
-- Safety guards for long/tight loops:
-  - configurable loop safety delay
-  - max runtime watchdog
-- Built-in APIs:
-  - `pinMode(pin, mode)`
-  - `digitalWrite(pin, HIGH|LOW)`
-  - `analogWrite(pin, 0..255)`
-  - `toggle(pin)`
-  - `setAll(value)`
-  - `shiftLeft()` / `shiftRight()`
-  - `delay(ms)`
-  - `millis()`
-  - `random(min, max)`
-  - `print(value)`
+- Dense no-scroll workspace with draggable splitters for panel width and console height.
+- Enhanced UX controls:
+  - API search panel filtering
+  - dynamic LED count (6..24) with instant simulator rebuild
+  - autosave toggle with debounced draft persistence
+  - import/export draft actions
+  - contrast mode toggle for accessibility
+- Editor productivity features:
+  - line numbers, live cursor position, snippets, one-click formatter
+  - bracket pairing + tab indentation
+  - keyboard shortcuts (`Ctrl/Cmd + Enter`, `Ctrl/Cmd + S`, `Ctrl/Cmd + Space`)
+  - contextual autocomplete popup
+- Runtime observability:
+  - live telemetry (`LEDs lit`, `avg brightness`, `loop cycles`, `loops/s`)
+  - manual LED toggling when runtime is idle
+- Runtime safety and resilience:
+  - global fallback banner with one-click recovery
+  - guarded event wiring and safe startup calls
+  - input range validation + sketch structure validation
+  - runtime watchdog + loop safety delay
 
 ## Run locally
 
@@ -30,8 +33,15 @@ python3 -m http.server 8000
 
 Open <http://localhost:8000>.
 
-## Reliability notes
+## Built-in APIs
 
-- Program-level error logging with a dedicated runtime error state.
-- Compile cache keeps transformed sketches in memory to improve repeat run speed.
-- Drafts and cache metadata are stored in `localStorage` when available.
+- `pinMode(pin, mode)`
+- `digitalWrite(pin, HIGH|LOW)`
+- `analogWrite(pin, 0..255)`
+- `toggle(pin)`
+- `setAll(value)`
+- `shiftLeft()` / `shiftRight()`
+- `delay(ms)`
+- `millis()`
+- `random(min, max)`
+- `print(value)`

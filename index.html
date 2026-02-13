@@ -4,9 +4,14 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>LumaLab Studio — LED Sketch Engine</title>
+    <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
+    <noscript>
+      <div class="fallback-banner">JavaScript is required for LumaLab. Please enable JavaScript and refresh.</div>
+    </noscript>
+
     <main class="workspace">
       <header class="topbar panel">
         <div>
@@ -17,65 +22,110 @@
           <span id="runtimeStatus" class="pill idle">Idle</span>
           <span id="cacheStatus" class="pill">Cache warmup</span>
           <span id="lastRun" class="pill">No runs yet</span>
+          <span id="loopRate" class="pill">0 loops/s</span>
         </div>
       </header>
 
-      <section class="panel editor-panel">
-        <div class="editor-toolbar">
-          <label>
-            Presets
-            <select id="presetSelect"></select>
-          </label>
-          <button id="loadPresetBtn" type="button">Load preset</button>
-          <button id="saveDraftBtn" type="button">Save draft</button>
-          <button id="clearConsoleBtn" type="button">Clear logs</button>
-        </div>
-
-        <div class="editor-shell">
-          <pre id="lineNumbers" aria-hidden="true"></pre>
-          <textarea id="codeEditor" spellcheck="false"></textarea>
-        </div>
-
-        <div class="controls">
-          <button id="runBtn" class="primary">Run</button>
-          <button id="stopBtn">Stop</button>
-          <button id="resetBtn">Reset LEDs</button>
-          <label>
-            Loop safety delay (ms)
-            <input id="loopSafety" type="number" min="0" max="2000" step="10" value="20" />
-          </label>
-          <label>
-            Max loop runtime (ms)
-            <input id="maxRunMs" type="number" min="100" max="120000" step="100" value="15000" />
-          </label>
-        </div>
-
-        <pre id="console" aria-live="polite"></pre>
+      <section class="panel utility-row" aria-label="Global controls">
+        <label>
+          API search
+          <input id="apiSearch" type="search" placeholder="Search runtime APIs" />
+        </label>
+        <label>
+          LED count
+          <input id="ledCount" type="range" min="6" max="24" step="1" value="12" />
+          <span id="ledCountValue" class="pill">12</span>
+        </label>
+        <label class="toggle-label">
+          <input id="autosaveToggle" type="checkbox" checked />
+          Autosave draft
+        </label>
+        <button id="themeToggleBtn" type="button">Toggle contrast</button>
+        <button id="exportDraftBtn" type="button">Export draft</button>
+        <button id="importDraftBtn" type="button">Import draft</button>
+        <input id="importDraftFile" type="file" accept=".txt,.ino,.js" class="hidden" />
       </section>
 
-      <section class="panel sim-panel">
-        <div class="sim-header">
-          <h2>Virtual LED Strip</h2>
-          <div class="stats-grid">
-            <article>
-              <h3 id="litCount">0</h3>
-              <p>LEDs lit</p>
-            </article>
-            <article>
-              <h3 id="avgBrightness">0%</h3>
-              <p>Avg brightness</p>
-            </article>
-            <article>
-              <h3 id="loopCounter">0</h3>
-              <p>Loop cycles</p>
-            </article>
+      <section class="panel studio-shell" aria-label="Workspace shell">
+        <div id="globalFallback" class="fallback-banner hidden" role="alert">
+          <span id="fallbackMessage">A recoverable issue was detected.</span>
+          <button id="recoverBtn" type="button">Recover workspace</button>
+        </div>
+
+        <section class="panel-column left-col">
+          <div class="editor-toolbar">
+            <label>
+              Presets
+              <select id="presetSelect"></select>
+            </label>
+            <button id="loadPresetBtn" type="button">Load preset</button>
+            <button id="saveDraftBtn" type="button">Save draft</button>
+            <button id="formatCodeBtn" type="button">Format code</button>
+            <button id="clearConsoleBtn" type="button">Clear logs</button>
           </div>
-        </div>
-        <div id="ledStrip" class="led-strip"></div>
-        <div class="legend">
-          <span><strong>OFF:</strong> dormant diode</span>
-          <span><strong>ON/PWM:</strong> intensity scales with analog value</span>
-        </div>
+
+          <div class="snippet-toolbar" id="snippetToolbar" aria-label="Code snippets"></div>
+
+          <div class="editor-shell" id="editorShell">
+            <pre id="lineNumbers" aria-hidden="true"></pre>
+            <textarea id="codeEditor" spellcheck="false" aria-label="Code editor"></textarea>
+            <ul id="autocompleteList" class="autocomplete hidden" role="listbox" aria-label="Autocomplete"></ul>
+          </div>
+
+          <div class="drag-handle horizontal" id="consoleResize" title="Resize console"></div>
+          <pre id="console" aria-live="polite"></pre>
+
+          <div class="controls">
+            <button id="runBtn" class="primary">Run</button>
+            <button id="stopBtn">Stop</button>
+            <button id="resetBtn">Reset LEDs</button>
+            <label>
+              Loop safety delay (ms)
+              <input id="loopSafety" type="number" min="0" max="2000" step="10" value="20" />
+            </label>
+            <label>
+              Max loop runtime (ms)
+              <input id="maxRunMs" type="number" min="100" max="120000" step="100" value="15000" />
+            </label>
+            <span id="cursorStatus" class="pill">Ln 1, Col 1</span>
+          </div>
+        </section>
+
+        <div class="drag-handle vertical" id="shellResize" title="Resize panels"></div>
+
+        <section class="panel-column right-col">
+          <section class="panel sim-panel">
+            <div class="sim-header">
+              <h2>Virtual LED Strip</h2>
+              <div class="stats-grid">
+                <article>
+                  <h3 id="litCount">0</h3>
+                  <p>LEDs lit</p>
+                </article>
+                <article>
+                  <h3 id="avgBrightness">0%</h3>
+                  <p>Avg brightness</p>
+                </article>
+                <article>
+                  <h3 id="loopCounter">0</h3>
+                  <p>Loop cycles</p>
+                </article>
+              </div>
+            </div>
+            <div id="ledStrip" class="led-strip"></div>
+            <div class="legend">
+              <span><strong>OFF:</strong> dormant diode</span>
+              <span><strong>ON/PWM:</strong> intensity scales with analog value</span>
+              <span><strong>Tip:</strong> click LEDs to toggle while idle</span>
+            </div>
+          </section>
+
+          <section class="panel help-panel">
+            <h2>API & Productivity Help</h2>
+            <div id="apiList" class="api-list"></div>
+            <p class="help-note">Shortcuts: Ctrl/Cmd + Enter run, Ctrl/Cmd + S save, Ctrl/Cmd + Space autocomplete.</p>
+          </section>
+        </section>
       </section>
     </main>
 
